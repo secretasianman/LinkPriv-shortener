@@ -1,0 +1,15 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>Mr. Shortener</title>
+  </head>
+  <body>
+    {% block url_form %}
+    <form name="url_form" action="/submit/" method="post">
+      {% csrf_token %}
+      {{ link_form.as_p }}
+      <input type="submit" value="Submit" />
+    </form>
+    {% endblock %}
+  </body>
+</html>

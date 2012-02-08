@@ -1,0 +1,16 @@
+<head>
+  <title>Mr. Shortener- Results</title>
+</head>
+
+<h1>Shortened URL: {{ encodedLink }} </h1>
+
+<script>
+  var hi = {{ perm }};
+  document.getElementById("ohai").innerHTML = "hi";
+</script>
+<input type="range"  min="0" max="100" />
+<div id="ohai">
+  <script>
+    document.write(hi[9]);
+  </script>
+</div>
