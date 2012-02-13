@@ -2,9 +2,12 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils import simplejson
+
 import itertools
 
 from shortener.models import Link, LinkSubmitForm
+from webkit2png import generate_image
+
 
 def redir(request, encoded):
     #Potential shortened link. Decode and check to see if it's in the database. If so, redirect to full url page. If not, error.
@@ -36,8 +39,6 @@ def submit(request):
             for perm in itertools.combinations(args,i):
                 combinations.append(perm)
                 
-        combinations.append(args)
-        
         print combinations
 
         #Gets the shortened link if this url has been shortened already. If not, it makes a new one.
