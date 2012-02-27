@@ -1,0 +1,28 @@
+<head>
+  <title>Mr. Shortener- Results</title>
+  <script>
+    
+ 
+    var hi = JSON.parse('{{ perm|safe }}');
+
+    function setSlider(){
+    document.getElementById("slider").max = hi.length-1;
+    document.getElementById("status").innerHTML = hi[document.getElementById("slider").value];
+}
+    
+    
+    function update(curr){
+    document.getElementById("status").innerHTML = hi[curr];
+    }
+    
+  </script>
+</head>
+
+<body onload="setSlider()">
+<h1>Shortened URL: {{ encodedLink }} </h1>
+
+<div id="status"></div>
+<input id="slider" type="range"  min="0" max="10" onchange="update(this.value)"/>
+
+
+</body>

@@ -4,9 +4,10 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.utils import simplejson
 
 import itertools
+import threading
 
 from shortener.models import Link, LinkSubmitForm
-from webkit2png import generate_image
+import webkit2png
 
 
 def redir(request, encoded):
@@ -35,12 +36,27 @@ def submit(request):
         
         combinations = []
 
-        for i in range(1,len(args)):
+        for i in range(1,len(args)+1):
             for perm in itertools.combinations(args,i):
                 combinations.append(perm)
                 
         print combinations
+        
+        count = 0
 
+        #Image Gen
+        for c in combinations:
+            urlCombination = urlPart[0]+"?"
+            for arg in c:
+                urlCombination = urlCombination + arg +"&"
+            urlCombination = urlCombination[0:len(urlCombination)-1]
+
+            thread = threading.Thread(target=webkit2png.generate_image,args=(urlCombination,"./images/ss_"+str(count)+".png"))
+            thread.start()
+        
+            count = count + 1
+
+        print threading.enumerate()
         #Gets the shortened link if this url has been shortened already. If not, it makes a new one.
         link = None
         try:

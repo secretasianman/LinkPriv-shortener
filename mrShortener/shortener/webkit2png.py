@@ -490,10 +490,16 @@ def main(website_url=None, output_file=None):
                 if "plugins" in options.features:
                     renderer.qWebSettings[QWebSettings.PluginsEnabled] = True
 
+            print options.url 
+            print "HI"
+            
+
             renderer.render_to_file(url=options.url, file=options.output)
             options.output.close()
             QApplication.exit(0)
         except RuntimeError, e:
+            print "BYE"
+            sys.stdout.flush()
             logger.error("main: %s" % e)
             print >> sys.stderr, e
             QApplication.exit(1)
@@ -501,7 +507,7 @@ def main(website_url=None, output_file=None):
     # Initialize Qt-Application, but make this script
     # abortable via CTRL-C
     app = init_qtgui(display = options.display, style=options.style)
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    #signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     QTimer.singleShot(0, __main_qt)
     return app.exec_()

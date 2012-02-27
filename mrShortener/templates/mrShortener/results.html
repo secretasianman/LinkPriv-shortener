@@ -1,28 +1,169 @@
-<head>
-  <title>Mr. Shortener- Results</title>
-  <script>
-    
- 
-    var hi = JSON.parse('{{ perm|safe }}');
+<html>
+	<head>
+		<title>clean.URL</title>
+		<style type="text/css">
+			#mainContainer{
+				margin:0 auto;
+				position:relative;
+			}
+			#logo{
+				width:401px;
+				height:131px;
+				margin:0 auto;
+				position:relative;
+			}
+			#screenshots{
+				width:60%;
+				height:500px;
+				margin:0 auto;
+			cd ..	position:relative;
+			}
+			.ss{
+				position:absolute;
+			}
+		</style>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script type="text/javascript">
+			var inputs = []
+			var focus = 3;
+			var smallSSWidth;
+			
+			
+			for(var i=0;i<7;i++){
+				inputs.push("ss_0.png");
+			}
+			
+			$(window).resize(function () { 
+				cleanSS();
+				setup();
+			});
 
-    function setSlider(){
-    document.getElementById("slider").max = hi.length-1;
-    document.getElementById("status").innerHTML = hi[document.getElementById("slider").value];
-}
-    
-    
-    function update(curr){
-    document.getElementById("status").innerHTML = hi[curr];
-    }
-    
-  </script>
-</head>
+			
+			//Add screenshots to screenshot div. Set defaults as well.
+			function setup(){
+				var curr_zindex = 1;
+				smallSSWidth = Math.ceil(((($("#screenshots").width())/2)/(inputs.length-1))*3.333);
+			
+				for(var i=0;i<inputs.length;i++){
+					//Create screenshot container and do basic setup.
+					var newInput = document.createElement('div');
+					newInput.setAttribute("id","ss"+i);
+					newInput.setAttribute("class","ss");
+					newInput.setAttribute("onclick","click("+inputs[i]+")");
+					newInput.setAttribute("onmouseover","mouseOver("+i+")");
+					
+					//Create image to put in screenshot container 
+					var newInputImg = document.createElement('img');
+					newInputImg.setAttribute("src",inputs[i]);
+					newInputImg.setAttribute("id","ssimg"+i);
+					
+					//Add image to screenshot container
+					newInput.appendChild(newInputImg);
+					document.getElementById("screenshots").appendChild(newInput);	
+					
+					$("#ss"+i).css("z-index",curr_zindex);
+					//alert($("#ss"+i).css("z-index"));
+					
+					//Set up z-index
+					if(i < focus){
+						curr_zindex++;
+					}
+					else if(i == focus || i > focus){
+						curr_zindex--;
+					}
+					
+					//Set size and pos
+					if(i == focus){
+						$("#ssimg"+i).width($("#screenshots").width()/2);
+						$("#ss"+i).css("margin-left",i*smallSSWidth*.3);
+					}
+					else if(i < focus){
+						$("#ssimg"+i).width(smallSSWidth);
+						$("#ss"+i).css("margin-left",i*smallSSWidth*.3);
+					}
+					else if(i > focus){
+						$("#ssimg"+i).width(smallSSWidth);
+						$("#ss"+i).css("margin-left",i*(smallSSWidth*.3)+($("#screenshots").width()/2)-(smallSSWidth));
+					}
+				}
+				
+				$("#ssimg"+focus).load(function() {
+					$("#screenshots").height($("#ssimg"+focus).height());
+					//$("#screenshots").css("margin-top","-"+($("#screenshots").height()/2));
+					
+					
+					for(var i=0;i<inputs.length;i++){
+						if(i != focus){
+							$("#ss"+i).css("top","50%");
+							$("#ss"+i).css("margin-top","-"+($("#ss"+i).height()/2));
+						}
+					}
+				});
+			}
+			
+			//Make curr focus small and moused over screenshot large.
+			function mouseOver(which){
+				
+				while(focus != which){
+					console.log(focus + " : " +$("#ss"+focus).css("z-index"));
+					if(focus < which){
+						$("#ssimg"+focus).width(smallSSWidth);
+						$("#ss"+focus).css("top","50%");
+						$("#ss"+focus).css("margin-top","-"+($("#ss"+focus).height()/2));
+						focus++;
+						//Move new focus
+						$("#ss"+focus).css("margin-left",focus*(smallSSWidth*.3));
+						$("#ssimg"+focus).width($("#screenshots").width()/2);
+						$("#ss"+focus).css("top","0");
+						$("#ss"+focus).css("margin-top","0");
+					}
+					else{
+						//Shrink and move old focus
+						$("#ss"+focus).css("margin-left",focus*(smallSSWidth*.3)+($("#screenshots").width()/2)-(smallSSWidth));
+						$("#ssimg"+focus).width(smallSSWidth);
+						$("#ss"+focus).css("top","50%");
+						$("#ss"+focus).css("margin-top","-"+($("#ss"+focus).height()/2));
+						
+						focus--;
+						$("#ssimg"+focus).width($("#screenshots").width()/2);
+						$("#ss"+focus).css("top","0");
+						$("#ss"+focus).css("margin-top","0");
+						
+					}
 
-<body onload="setSlider()">
-<h1>Shortened URL: {{ encodedLink }} </h1>
-
-<div id="status"></div>
-<input id="slider" type="range"  min="0" max="10" onchange="update(this.value)"/>
-
-
-</body>
+					if(parseInt($("#ss"+(focus-1)).css("z-index")) > parseInt($("#ss"+focus).css("z-index"))){
+						$("#ss"+focus).css("z-index",parseInt($("#ss"+(focus-1)).css("z-index"))+1);
+					}
+					if(parseInt($("#ss"+(focus+1)).css("z-index")) > parseInt($("#ss"+focus).css("z-index"))){
+						$("#ss"+focus).css("z-index",parseInt($("#ss"+(focus+1)).css("z-index"))+1);
+					}
+				}
+			}
+			
+			function cleanSS(){
+				$("#screenshots").empty();
+			}
+			
+			//Onclick give selected link to shortener.
+			function click(link){
+			
+			}
+		</script>
+	
+	</head>
+	<body onload="setup()">
+		<div id="mainContainer">
+			<div id="logo">
+				<img src="/media/cleanURL.jpg"/>
+			</div>
+			
+			<div id="url">
+			
+			</div>
+			
+			<div id="screenshots">
+			
+			</div>
+		</div>
+	</body>
+</html>

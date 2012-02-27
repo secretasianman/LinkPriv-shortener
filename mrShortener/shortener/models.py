@@ -5,6 +5,7 @@ from django.db import models
 from django.conf import settings
 from django import forms
 
+
 class Link(models.Model):
     url = models.URLField(verify_exists=True, unique=True)
     

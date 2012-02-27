@@ -1,13 +1,36 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
-    <title>Mr. Shortener</title>
+    <title>clean.URL: Because Clean is Sexy</title>
+    <style type="text/css">
+      #logo{
+      width:401px;
+      height:131px;
+      margin:0 auto;
+      position:relative;
+      }
+      #urlInput{
+      width:450px;
+      height:200px;
+      margin:0 auto;
+      position:relative;
+      margin-top:150px;
+      }
+      #btn{
+      float:right;
+      margin-right:45px;
+      }
+      
+    </style>
   </head>
   <body>
-    <form name="url_form" action="/submit/" method="post">
+    <div id="logo">
+      <img src="http://danielkim.net/images/cleanURL.jpg"/>
+    </div>
+    <form name="url_form" action="/submit/" method="post" id="urlInput">
       {% csrf_token %}
       {{ link_form.as_p }}
-      <input type="submit" value="Submit" />
+      <input type="submit" value="Submit" id="btn"/>
     </form>
   </body>
 </html>
