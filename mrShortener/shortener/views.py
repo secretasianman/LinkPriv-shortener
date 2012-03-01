@@ -51,8 +51,8 @@ def submit(request):
                 urlCombination = urlCombination + arg +"&"
             urlCombination = urlCombination[0:len(urlCombination)-1]
 
-            thread = threading.Thread(target=webkit2png.generate_image,args=(urlCombination,"./images/ss_"+str(count)+".png"))
-            thread.start()
+            webkit2png.generate_image(urlCombination,"./images/ss_"+str(count)+".png")
+            
         
             count = count + 1
 
@@ -69,7 +69,7 @@ def submit(request):
             new_link.save()
             link = new_link
   
-        return render_to_response('mrShortener/results.html', {"encodedLink":link.shortUrl(),"perm":simplejson.dumps(combinations)})
+        return render_to_response('mrShortener/results.html', {"encodedLink":link.shortUrl(),"perm":simplejson.dumps(combinations)},context_instance=RequestContext(request))
     
 
 

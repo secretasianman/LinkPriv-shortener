@@ -114,7 +114,7 @@ sys.exit(app.exec_())
         self.wait = kwargs.get('wait', 0)
         self.scaleToWidth = kwargs.get('scaleToWidth', 0)
         self.scaleToHeight = kwargs.get('scaleToHeight', 0)
-        self.scaleRatio = kwargs.get('scaleRatio', 'keep')
+        self.scaleRatio = kwargs.get('scaleRatio', 'crop')
         # Set this to true if you want to capture flash.
         # Not that your desktop must be large enough for
         # fitting the whole window.
@@ -149,11 +149,18 @@ sys.exit(app.exec_())
         """Renders the image into a File resource.
         Returns the size of the data that has been written.
         """
-        format = self.format # this may not be constant due to processEvents()
+        print "about to render"
+        format = "png"
         image = self.render(url)
+
+        print "before buffer making"
         qBuffer = QBuffer()
+        print "buffer made"
         image.save(qBuffer, format)
+        print "image saved"
         file.write(qBuffer.buffer().data())
+        print "file written"
+        qBuffer.close()
         return qBuffer.size()
 
     def render_to_bytes(self, url):
@@ -220,9 +227,14 @@ class _WebkitRendererHelper(QObject):
         on the value of 'grabWholeWindow' is drawn into a QPixmap
         and postprocessed (_post_process_image).
         """
+        print "start render"
+        print self.width
+        print self.height
+        print self.timeout
         self._load_page(url, self.width, self.height, self.timeout)
         # Wait for end of timer. In this time, process
         # other outstanding Qt events.
+        print "post load"
         if self.wait > 0:
             logger.debug("Waiting %d seconds " % self.wait)
             waitToTime = time.time() + self.wait
@@ -230,11 +242,13 @@ class _WebkitRendererHelper(QObject):
                 while QApplication.hasPendingEvents():
                     QApplication.processEvents()
 
+        print "pre pending events"
         # Paint this frame into an image
         #self._window.repaint()
-        while QApplication.hasPendingEvents():
-            QApplication.processEvents()
+        #while QApplication.hasPendingEvents():
+        QApplication.processEvents()
 
+        print "mid render"
         if self.renderTransparentBackground:
             # Another possible drawing solution
             image = QImage(self._page.viewportSize(), QImage.Format_ARGB32)
@@ -259,7 +273,7 @@ class _WebkitRendererHelper(QObject):
                 image = QPixmap.grabWindow(self._window.winId())
             else:
                 image = QPixmap.grabWidget(self._window)
-        
+        print "post render"
 
         return self._post_process_image(image)
 
@@ -278,12 +292,18 @@ class _WebkitRendererHelper(QObject):
         # sort of flag should be passed in to WebkitRenderer maybe?
         #self._page.mainFrame().load(QUrl.fromEncoded(url))
         self._page.mainFrame().load(QUrl(url))
+
+        print "preload"
+        
+        
         while self.__loading:
             if timeout > 0 and time.time() >= cancelAt:
                 raise RuntimeError("Request timed out on %s" % url)
-            while QApplication.hasPendingEvents():
-                QCoreApplication.processEvents()
+            #while QApplication.hasPendingEvents():
+            QCoreApplication.processEvents()
+            print "load"
 
+        print "postload"
         logger.debug("Processing result")
 
         if self.__loading_result == False:
@@ -298,6 +318,7 @@ class _WebkitRendererHelper(QObject):
             size.setHeight(height)
 
         self._window.resize(size)
+        
 
     def _post_process_image(self, qImage):
         """If 'scaleToWidth' or 'scaleToHeight' are set to a value
@@ -366,154 +387,85 @@ def init_qtgui(display=None, style=None, qtargs=[]):
 
 
 def main(website_url=None, output_file=None):
-    # This code will be executed if this module is run 'as-is'.
-
-    # Enable HTTP proxy
-    if 'http_proxy' in os.environ:
-        proxy_url = urlparse.urlparse(os.environ.get('http_proxy'))
-        proxy = QNetworkProxy(QNetworkProxy.HttpProxy, proxy_url.hostname, proxy_url.port)
-        QNetworkProxy.setApplicationProxy(proxy)
+    newThread = renderThread()
+    print "URL: "+website_url
+    print "FILE: "+str(output_file)
+    newApp = init_qtgui(display = None, style=None)
+    newThread.setVars(website_url,output_file,newApp)
     
-    # Parse command line arguments.
-    # Syntax:
-    # $0 [--xvfb|--display=DISPLAY] [--debug] [--output=FILENAME] <URL>
+    newThread.run()
 
-    description = "Creates a screenshot of a website using QtWebkit." \
-                + "This program comes with ABSOLUTELY NO WARRANTY. " \
-                + "This is free software, and you are welcome to redistribute " \
-                + "it under the terms of the GNU General Public License v2."
+class renderThread(QThread):
+    newApp=None
+    website_url=None
+    output_fileName=None
+    output_file=None
 
-    parser = OptionParser(usage="usage: %prog [options] <URL>",
-                          version="%prog " + VERSION + ", Copyright (c) Roland Tapken",
-                          description=description, add_help_option=True)
-    parser.add_option("-x", "--xvfb", nargs=2, type="int", dest="xvfb",
-                      help="Start an 'xvfb' instance with the given desktop size.", metavar="WIDTH HEIGHT")
-    parser.add_option("-g", "--geometry", dest="geometry", nargs=2, default=(0, 0), type="int",
-                      help="Geometry of the virtual browser window (0 means 'autodetect') [default: %default].", metavar="WIDTH HEIGHT")
-    parser.add_option("-o", "--output", dest="output",
-                      help="Write output to FILE instead of STDOUT.", metavar="FILE")
-    parser.add_option("-f", "--format", dest="format", default="png",
-                      help="Output image format [default: %default]", metavar="FORMAT")
-    parser.add_option("--scale", dest="scale", nargs=2, type="int",
-                      help="Scale the image to this size", metavar="WIDTH HEIGHT")
-    parser.add_option("--aspect-ratio", dest="ratio", type="choice", choices=["ignore", "keep", "expand", "crop"],
-                      help="One of 'ignore', 'keep', 'crop' or 'expand' [default: %default]")
-    parser.add_option("-F", "--feature", dest="features", action="append", type="choice",
-                      choices=["javascript", "plugins"],
-                      help="Enable additional Webkit features ('javascript', 'plugins')", metavar="FEATURE")
-    parser.add_option("-w", "--wait", dest="wait", default=0, type="int",
-                      help="Time to wait after loading before the screenshot is taken [default: %default]", metavar="SECONDS")
-    parser.add_option("-t", "--timeout", dest="timeout", default=0, type="int",
-                      help="Time before the request will be canceled [default: %default]", metavar="SECONDS")
-    parser.add_option("-W", "--window", dest="window", action="store_true",
-                      help="Grab whole window instead of frame (may be required for plugins)", default=False)
-    parser.add_option("-T", "--transparent", dest="transparent", action="store_true",
-                      help="Render output on a transparent background (Be sure to have a transparent background defined in the html)", default=False)
-    parser.add_option("", "--style", dest="style",
-                      help="Change the Qt look and feel to STYLE (e.G. 'windows').", metavar="STYLE")
-    parser.add_option("-d", "--display", dest="display",
-                      help="Connect to X server at DISPLAY.", metavar="DISPLAY")
-    parser.add_option("--debug", action="store_true", dest="debug",
-                      help="Show debugging information.", default=False)
-    parser.add_option("--log", action="store", dest="logfile", default=LOG_FILENAME,
-                      help="Select the log output file",)
+    def setVars(self,url,ofile,app):
+        print "setting up vars"
+        global website_url
+        global output_fileName
+        global newApp
+        website_url = url
+        output_fileName = ofile
+        newApp = app
+        print "vars set up: " + website_url + " : " + str(output_fileName)
 
-    # Parse command line arguments and validate them (as far as we can)
-    (options,args) = parser.parse_args()
-    if len(args) != 1 and website_url is None:
-        parser.error("incorrect number of arguments")
-    if options.display and options.xvfb:
-        parser.error("options -x and -d are mutually exclusive")
-    if website_url is not None:
-        options.url = website_url
-    else:
-        options.url = args[0]
+    def run(self):
+        global output_file
+        print "RUNNING........" + website_url
+        # This code will be executed if this module is run 'as-is'.
 
-    logging.basicConfig(filename=options.logfile,level=logging.WARN,)
+        # Enable HTTP proxy
+        if 'http_proxy' in os.environ:
+            proxy_url = urlparse.urlparse(os.environ.get('http_proxy'))
+            proxy = QNetworkProxy(QNetworkProxy.HttpProxy, proxy_url.hostname, proxy_url.port)
+            QNetworkProxy.setApplicationProxy(proxy)
 
-    # Enable output of debugging information
-    if options.debug:
-        logger.setLevel(logging.DEBUG)
+        output_file = open(output_fileName, "w")
 
-    if options.xvfb:
-        # Start 'xvfb' instance by replacing the current process
-        server_num = int(os.getpid() + 1e6)
-        newArgs = ["xvfb-run", "--auto-servernum", "--server-num", str(server_num), "--server-args=-screen 0, %dx%dx24" % options.xvfb, sys.argv[0]]
-        skipArgs = 0
-        for i in range(1, len(sys.argv)):
-            if skipArgs > 0:
-                skipArgs -= 1
-            elif sys.argv[i] in ["-x", "--xvfb"]:
-                skipArgs = 2 # following: width and height
-            else:
-                newArgs.append(sys.argv[i])
-        logger.debug("Executing %s" % " ".join(newArgs))
-        os.execvp(newArgs[0],newArgs[1:])
+       
+
+        # Technically, this is a QtGui application, because QWebPage requires it
+        # to be. But because we will have no user interaction, and rendering can
+        # not start before 'app.exec_()' is called, we have to trigger our "main"
+        # by a timer event.
+        def __main_qt():
+            # Render the page.
+            # If this method times out or loading failed, a
+            # RuntimeException is thrown
+            try:
+                # Initialize WebkitRenderer object
+                renderer = WebkitRenderer()
+                
+                renderer.height = 768
+                renderer.grabWholeWindow = False
+
+                renderer.scaleRatio = "crop"
+                renderer.scaleToWidth = 500
+                renderer.scaleToHeight = 500
+
+                renderer.render_to_file(url=website_url, file=output_file)
+                output_file.close()
+                QApplication.exit(0)
+            except RuntimeError, e:
+                sys.stdout.flush()
+                logger.error("main: %s" % e)
+                print >> sys.stderr, e
+                QApplication.exit(1)
+
+        # Initialize Qt-Application, but make this script
+        # abortable via CTRL-C
+
         
-    # Prepare outout ("1" means STDOUT)
-    if output_file is not None:
-        options.output = open(output_file, "w")
-    elif options.output is not None:
-        options.output = open(options.output, "w")
-    else:
-        options.output = sys.stdout
-
-    logger.debug("Version %s, Python %s, Qt %s", VERSION, sys.version, qVersion());
-
-    # Technically, this is a QtGui application, because QWebPage requires it
-    # to be. But because we will have no user interaction, and rendering can
-    # not start before 'app.exec_()' is called, we have to trigger our "main"
-    # by a timer event.
-    def __main_qt():
-        # Render the page.
-        # If this method times out or loading failed, a
-        # RuntimeException is thrown
-        try:
-            # Initialize WebkitRenderer object
-            renderer = WebkitRenderer()
-            renderer.width = options.geometry[0]
-            renderer.height = options.geometry[1]
-            renderer.timeout = options.timeout
-            renderer.wait = options.wait
-            renderer.format = options.format
-            renderer.grabWholeWindow = options.window
-            renderer.renderTransparentBackground = options.transparent
-
-            if options.scale:
-                renderer.scaleRatio = options.ratio
-                renderer.scaleToWidth = options.scale[0]
-                renderer.scaleToHeight = options.scale[1]
-
-            if options.features:
-                if "javascript" in options.features:
-                    renderer.qWebSettings[QWebSettings.JavascriptEnabled] = True
-                if "plugins" in options.features:
-                    renderer.qWebSettings[QWebSettings.PluginsEnabled] = True
-
-            print options.url 
-            print "HI"
-            
-
-            renderer.render_to_file(url=options.url, file=options.output)
-            options.output.close()
-            QApplication.exit(0)
-        except RuntimeError, e:
-            print "BYE"
-            sys.stdout.flush()
-            logger.error("main: %s" % e)
-            print >> sys.stderr, e
-            QApplication.exit(1)
-
-    # Initialize Qt-Application, but make this script
-    # abortable via CTRL-C
-    app = init_qtgui(display = options.display, style=options.style)
     #signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-    QTimer.singleShot(0, __main_qt)
-    return app.exec_()
+        QTimer.singleShot(0, __main_qt)
+        return newApp.exec_()
     #sys.exit(app.exec_())
 
 def generate_image(url, output_file):
+    print "Going into main..."
     main(url, output_file)
 
 if __name__ == '__main__':

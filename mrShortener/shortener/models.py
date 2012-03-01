@@ -42,4 +42,4 @@ class Link(models.Model):
 
 
 class LinkSubmitForm(forms.Form):
-    submitForm = forms.URLField(verify_exists=True,label='URL to be shortened:')
+    submitForm = forms.URLField(verify_exists=True,label='')
