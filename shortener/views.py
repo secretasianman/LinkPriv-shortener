@@ -1,9 +1,11 @@
+from django.conf import settings
 from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils import simplejson
 
 import itertools
+import os.path
 import threading
 
 from shortener.models import Link, LinkSubmitForm
@@ -52,7 +54,8 @@ def submit(request):
             urlCombination = urlCombination[0:len(urlCombination)-1]
 
             webkit2png.generate_image(urlCombination,
-                                      "/home/kevinsu/workspace/LinkPriv-shortener/media/ss_" + str(count) + ".png")
+                                      os.path.join(settings.PROJECT_ROOT,
+                                                   "media/ss_%d.png"%count))
             
         
             count = count + 1
