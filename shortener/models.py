@@ -11,7 +11,7 @@ class Link(models.Model):
     
 
     def shortUrl(self):
-        return settings.SITE_BASE_URL + self.encode()
+        return "/" + self.encode()
 
     def longUrl(self):
         return self.url

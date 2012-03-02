@@ -30,7 +30,7 @@
 			
 			
 			for(var i=0;i<7;i++){
-				inputs.push("ss_0.png");
+				inputs.push("{{ MEDIA_URL}}ss_0.png");
 			}
 			
 			$(window).resize(function () { 
@@ -154,7 +154,7 @@
 	<body onload="setup()">
 		<div id="mainContainer">
 			<div id="logo">
-				<img src="{{ MEDIA_URL }}cleanURL.jpg"/>
+				<img src="{{ STATIC_URL }}img/cleanURL.jpg"/>
 			</div>
 			
 			<div id="url">

@@ -51,7 +51,8 @@ def submit(request):
                 urlCombination = urlCombination + arg +"&"
             urlCombination = urlCombination[0:len(urlCombination)-1]
 
-            webkit2png.generate_image(urlCombination,"./images/ss_"+str(count)+".png")
+            webkit2png.generate_image(urlCombination,
+                                      "/home/kevinsu/workspace/LinkPriv-shortener/media/ss_" + str(count) + ".png")
             
         
             count = count + 1
@@ -69,10 +70,14 @@ def submit(request):
             new_link.save()
             link = new_link
   
-        return render_to_response('mrShortener/results.html', {"encodedLink":link.shortUrl(),"perm":simplejson.dumps(combinations)},context_instance=RequestContext(request))
-    
+        return render_to_response('results.html',
+                                  {"encodedLink": link.shortUrl(),
+                                   "perm": simplejson.dumps(combinations)},
+                                  context_instance=RequestContext(request))
 
 
 def index(request):
     link_form = LinkSubmitForm()
-    return render_to_response('mrShortener/index.html', {'link_form':link_form},context_instance=RequestContext(request))
+    return render_to_response('index.html',
+                              {'link_form': link_form},
+                              context_instance=RequestContext(request))
