@@ -149,17 +149,12 @@ sys.exit(app.exec_())
         """Renders the image into a File resource.
         Returns the size of the data that has been written.
         """
-        print "about to render"
         format = "png"
         image = self.render(url)
 
-        print "before buffer making"
         qBuffer = QBuffer()
-        print "buffer made"
         image.save(qBuffer, format)
-        print "image saved"
         file.write(qBuffer.buffer().data())
-        print "file written"
         qBuffer.close()
         return qBuffer.size()
 
@@ -227,14 +222,9 @@ class _WebkitRendererHelper(QObject):
         on the value of 'grabWholeWindow' is drawn into a QPixmap
         and postprocessed (_post_process_image).
         """
-        print "start render"
-        print self.width
-        print self.height
-        print self.timeout
         self._load_page(url, self.width, self.height, self.timeout)
         # Wait for end of timer. In this time, process
         # other outstanding Qt events.
-        print "post load"
         if self.wait > 0:
             logger.debug("Waiting %d seconds " % self.wait)
             waitToTime = time.time() + self.wait
@@ -242,13 +232,11 @@ class _WebkitRendererHelper(QObject):
                 while QApplication.hasPendingEvents():
                     QApplication.processEvents()
 
-        print "pre pending events"
         # Paint this frame into an image
         #self._window.repaint()
         #while QApplication.hasPendingEvents():
         QApplication.processEvents()
 
-        print "mid render"
         if self.renderTransparentBackground:
             # Another possible drawing solution
             image = QImage(self._page.viewportSize(), QImage.Format_ARGB32)
@@ -273,7 +261,6 @@ class _WebkitRendererHelper(QObject):
                 image = QPixmap.grabWindow(self._window.winId())
             else:
                 image = QPixmap.grabWidget(self._window)
-        print "post render"
 
         return self._post_process_image(image)
 
@@ -293,7 +280,6 @@ class _WebkitRendererHelper(QObject):
         #self._page.mainFrame().load(QUrl.fromEncoded(url))
         self._page.mainFrame().load(QUrl(url))
 
-        print "preload"
         
         
         while self.__loading:
@@ -301,9 +287,7 @@ class _WebkitRendererHelper(QObject):
                 raise RuntimeError("Request timed out on %s" % url)
             #while QApplication.hasPendingEvents():
             QCoreApplication.processEvents()
-            print "load"
 
-        print "postload"
         logger.debug("Processing result")
 
         if self.__loading_result == False:
@@ -388,8 +372,6 @@ def init_qtgui(display=None, style=None, qtargs=[]):
 
 def main(website_url=None, output_file=None):
     newThread = renderThread()
-    print "URL: "+website_url
-    print "FILE: "+str(output_file)
     newApp = init_qtgui(display = None, style=None)
     newThread.setVars(website_url,output_file,newApp)
     
@@ -402,18 +384,15 @@ class renderThread(QThread):
     output_file=None
 
     def setVars(self,url,ofile,app):
-        print "setting up vars"
         global website_url
         global output_fileName
         global newApp
         website_url = url
         output_fileName = ofile
         newApp = app
-        print "vars set up: " + website_url + " : " + str(output_fileName)
 
     def run(self):
         global output_file
-        print "RUNNING........" + website_url
         # This code will be executed if this module is run 'as-is'.
 
         # Enable HTTP proxy
@@ -465,7 +444,6 @@ class renderThread(QThread):
     #sys.exit(app.exec_())
 
 def generate_image(url, output_file):
-    print "Going into main..."
     main(url, output_file)
 
 if __name__ == '__main__':

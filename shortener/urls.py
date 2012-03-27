@@ -8,7 +8,9 @@ from django.conf.urls.defaults import patterns, include, url
 urlpatterns = patterns('shortener.views',
     url(r'^$', 'index'),
     url(r'^submit/$','submit'),
+    url(r'^batch/$','batchAnalysis'),
+    url(r'^batchSubmit/$','batchSubmit'),
+    url(r'^batchProcess/$','batchProcess'),
     url(r'^(?P<encoded>[a-zA-Z0-9]+)/$', 'redir'),
-    #url(r'^media/(?P<path>.*)$', 'django.views.static.serve',{'document_root': settings.MEDIA_ROOT}),
-
+    
 )

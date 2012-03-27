@@ -23,11 +23,26 @@
 				position:absolute;
 			border:1px solid black;
 			}
+			p{
+			visibility:hidden;
+			}
+			#btn{
+			width:350px;
+			height:50px;
+			position:absolute;
+			left:50%;
+			margin-left:-175px;
+			bottom:50px;
+			}
+			
 		</style>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 		<script type="text/javascript">
-			var inputs = []
+			var inputs = [];
 			var combos = JSON.parse('{{ perm|safe }}');
+			var clicked = [];
+			var necessaryArgs = [];
+			var unnecessaryArgs = "";
 			var focus = Math.ceil((combos.length-1)/2);
 			var smallSSWidth;
 			
@@ -36,7 +51,7 @@
 				inputs.push("{{ MEDIA_URL}}ss_"+ i +".png");
 				console.log(combos[i]);
 			}
-
+					
 			
 			
 			$(window).resize(function () { 
@@ -55,14 +70,13 @@
 				else{
 					smallSSWidth = Math.ceil(((($("#screenshots").width())/2)/(inputs.length-1))*3.333);
 				}
-				console.log(smallSSWidth);
 
 				for(var i=0;i<inputs.length;i++){
 					//Create screenshot container and do basic setup.
 					var newInput = document.createElement('div');
 					newInput.setAttribute("id","ss"+i);
 					newInput.setAttribute("class","ss");
-					newInput.setAttribute("onclick","click("+inputs[i]+")");
+					newInput.setAttribute("onclick","clickSS("+i+")");
 					newInput.setAttribute("onmouseover","mouseOver("+i+")");
 					
 					//Create image to put in screenshot container 
@@ -93,7 +107,6 @@
 					else if(i < focus){
 						$("#ssimg"+i).width(smallSSWidth);
 						$("#ss"+i).css("margin-left",(i*smallSSWidth*(.3)));
-						console.log($("#ss"+i).css("margin-left"));
 					}
 					else if(i > focus){
 						$("#ssimg"+i).width(smallSSWidth);
@@ -106,13 +119,13 @@
 						var offset = i+(5-inputs.length)+1;
 						var blankFrame = document.createElement('div');
 						blankFrame.setAttribute("id","ss"+offset);
-						blankFrame.setAttribute("class","ss");
 						document.getElementById("screenshots").appendChild(blankFrame);
 						$("#ssimg"+offset).width(smallSSWidth);
 						$("#ssimg"+offset).width(smallSSWidth);
 						$("#ss"+offset).css("margin-left",offset*(smallSSWidth*.3)+($("#screenshots").width()/2)-(smallSSWidth));
 						
 					}
+					$("#screenshots").css("padding-left",(5-inputs.length)*smallSSWidth*(.3));
 				}
 				
 				$("#ssimg"+focus).load(function() {
@@ -127,6 +140,21 @@
 						}
 					}
 				});
+				
+				$("#id_processingURL").val("{{ url|safe }}");
+				$("#id_choices").val(unnecessaryArgs);
+				$("#id_remainingLinks").val("{{ links|safe }}");
+
+				
+				var linkCheck = "{{ links|safe }}";
+				if(linkCheck == ""){
+					$("#btn").attr("disabled", "disabled");
+				}
+				
+				
+				clickSS(combos.length-1);			
+				
+				
 			}
 			
 			//Make curr focus small and moused over screenshot large.
@@ -173,8 +201,55 @@
 			}
 			
 			//Onclick give selected link to shortener.
-			function click(link){
+			function clickSS(which){
+				if(indexOf(clicked,which)!=-1){
+					$("#ss"+which).css("border","1px solid black");
+					clicked.splice(indexOf(clicked,which),1);
+				}
+				else{
+					$("#ss"+which).css("border","5px solid black");	
+					clicked.push(which);
+				}
+				updateNec();
+				console.log(clicked);
+				console.log(necessaryArgs);
+			}
 			
+			function updateNec(){
+				necessaryArgs = [];
+				unnecessaryArgs = "";
+				var addBool = true;
+				for(var i=0;i<clicked.length;i++){
+					for(arg in combos[clicked[i]]){
+						addBool=true;
+						for(var j=0;j<clicked.length;j++){
+							if(indexOf(combos[clicked[j]],combos[clicked[i]][arg])==-1){
+								addBool=false;
+								break;
+							}
+						}
+						if((addBool == true) && (indexOf(necessaryArgs,combos[clicked[i]][arg])==-1)){
+							necessaryArgs.push(combos[clicked[i]][arg]);
+						}
+					}	
+				}
+
+				for(arg in combos[combos.length-1]){
+					if(indexOf(necessaryArgs,combos[combos.length-1][arg])==-1){
+						unnecessaryArgs= unnecessaryArgs+combos[combos.length-1][arg]+"|!|";
+					}
+				}
+				$("#id_choices").val(unnecessaryArgs);
+				console.log($("#id_choices").val());
+			}
+
+			function indexOf(list, element){
+				for(i in list){
+					if(element == list[i]){
+						return i;
+					}
+				}
+				return -1;
 			}
 		</script>
 	
@@ -193,5 +268,10 @@
 			
 			</div>
 		</div>
+		<form name="url_form" action="/batchProcess/" method="post" id="urlInput">
+		  {% csrf_token %}
+		  {{ invBatchProcessor.as_p }}
+		  <input type="submit" value="Submit" id="btn"/>
+		</form>
 	</body>
 </html>

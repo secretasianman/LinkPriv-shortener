@@ -4,6 +4,8 @@ import math
 from django.db import models
 from django.conf import settings
 from django import forms
+from httplib import HTTP
+from urlparse import urlparse
 
 
 class Link(models.Model):
@@ -43,3 +45,23 @@ class Link(models.Model):
 
 class LinkSubmitForm(forms.Form):
     submitForm = forms.URLField(verify_exists=True,label='')
+
+class batchLinkSubmitForm(forms.Form):
+    links = forms.CharField(label='')
+
+class batchProcessorForm(forms.Form):
+    processingURL = forms.CharField(label='')
+    choices = forms.CharField(required=False,label='')
+    remainingLinks = forms.CharField(label='')
+    
+
+
+def checkURL(url):
+    p = urlparse(url)
+    h = HTTP(p[1])
+    h.putrequest('HEAD', p[2])
+    h.endheaders()
+    
+    print h.getreply()[0]
+    if h.getreply()[0] == 200: return 1
+    else: return 0

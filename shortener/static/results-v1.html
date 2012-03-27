@@ -17,27 +17,22 @@
 				height:500px;
 				margin:0 auto;
 				position:relative;
-			
 			}
 			.ss{
 				position:absolute;
-			border:1px solid black;
 			}
 		</style>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 		<script type="text/javascript">
 			var inputs = []
 			var combos = JSON.parse('{{ perm|safe }}');
-			var focus = Math.ceil((combos.length-1)/2);
+			var focus = 0;
 			var smallSSWidth;
 			
 			
 			for(var i=0;i<combos.length;i++){
-				inputs.push("{{ MEDIA_URL}}ss_"+ i +".png");
-				console.log(combos[i]);
+				inputs.push("{{ MEDIA_URL}}ss_" + i +".png");
 			}
-
-			
 			
 			$(window).resize(function () { 
 				cleanSS();
@@ -48,15 +43,8 @@
 			//Add screenshots to screenshot div. Set defaults as well.
 			function setup(){
 				var curr_zindex = 1;
-
-				if(inputs.length<5){
-					smallSSWidth = Math.ceil(((($("#screenshots").width())/2)/(4))*3.333);
-				}
-				else{
-					smallSSWidth = Math.ceil(((($("#screenshots").width())/2)/(inputs.length-1))*3.333);
-				}
-				console.log(smallSSWidth);
-
+				smallSSWidth = Math.ceil(((($("#screenshots").width())/2)/(inputs.length-1))*3.333);
+			
 				for(var i=0;i<inputs.length;i++){
 					//Create screenshot container and do basic setup.
 					var newInput = document.createElement('div');
@@ -92,26 +80,11 @@
 					}
 					else if(i < focus){
 						$("#ssimg"+i).width(smallSSWidth);
-						$("#ss"+i).css("margin-left",(i*smallSSWidth*(.3)));
-						console.log($("#ss"+i).css("margin-left"));
+						$("#ss"+i).css("margin-left",i*smallSSWidth*.3);
 					}
 					else if(i > focus){
 						$("#ssimg"+i).width(smallSSWidth);
 						$("#ss"+i).css("margin-left",i*(smallSSWidth*.3)+($("#screenshots").width()/2)-(smallSSWidth));
-					}
-				}
-
-				if(inputs.length<5){
-					for(var i=0;i<5-inputs.length;i++){
-						var offset = i+(5-inputs.length)+1;
-						var blankFrame = document.createElement('div');
-						blankFrame.setAttribute("id","ss"+offset);
-						blankFrame.setAttribute("class","ss");
-						document.getElementById("screenshots").appendChild(blankFrame);
-						$("#ssimg"+offset).width(smallSSWidth);
-						$("#ssimg"+offset).width(smallSSWidth);
-						$("#ss"+offset).css("margin-left",offset*(smallSSWidth*.3)+($("#screenshots").width()/2)-(smallSSWidth));
-						
 					}
 				}
 				

@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>clean.URL: Because Clean is Sexy</title>
+    <style type="text/css">
+      body{
+      font-family:helvetica,arial,sans serif;
+      }
+
+      #logo{
+      width:401px;
+      height:131px;
+      margin:0 auto;
+      position:relative;
+      padding-top:30px;
+      }
+
+      #urlInput{
+      width:50%;
+      height:200px;
+      position:absolute;
+      top:50%;
+      left:50%;
+      margin-left:-350px;
+      margin-top:-10px;
+      }
+  
+
+      input{
+      border:solid black 1px;
+      
+      padding:6px 4px 6px 4px;
+      font-size:30px;
+      border-radius:4px;
+      }
+      
+      p{
+      display:inline;
+      }
+      #id_submitForm{
+      width:70%;
+      text-align:center;
+      margin-left:35px;
+      }
+      #btn{
+      width:20%;
+      }
+     
+      
+    </style>
+  </head>
+  <body>
+    <div id="logo">
+      <img src="http://danielkim.net/images/cleanURL.jpg"/>
+    </div>
+    <form name="url_form" action="/batchSubmit/" method="post" id="urlInput">
+      {% csrf_token %}
+      {{ inputs.as_p }}
+      <input type="submit" value="Submit" id="btn"/>
+    </form>
+  </body>
+</html>
